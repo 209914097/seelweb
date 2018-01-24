@@ -1,17 +1,20 @@
+<!DOCTYPE html>
+<!-- 版本号V3 -->
+<!-- saved from url=(0068)http://www.html5tricks.com/demo/html5-canvas3-pixel-clock/index2.html -->
 <html>
 <head>
-<title>seel page</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-</head>
-<body>
-<style  type="text/css">
-body{
+<title>seel page</title>
+<link rel="shortcut icon" href="logo.ico"/>
+<style>
+    body{
 background:#F1F7FB;
+overflow:hidden;
 }
 fieldset.search {
     padding: 0px;
     border: none;
-    width: 326px;
+    width: 346px;
 	height: 34px;
     background:#e0e0e0;
 }
@@ -24,11 +27,11 @@ fieldset.search:hover {
     float: left;
 }
 .search input.box {
-    height: 32px;
-    width: 290;
+    height: 22px;
+    width: 300px;
     margin-right: 0px;
     padding-right: 0px;
-    background: #e0e0e0;
+    background: #ececec;
     margin: 1px;
 }
 .search input.box:focus {
@@ -49,11 +52,506 @@ fieldset.search:hover {
 }
  .center-in-center{   
     position: absolute;   
-    top: 45%;   
+    top: 47%;   
     left: 50%;   
     transform: translate(-50%, -50%);   
 }
 </style>
+</head>
+<body>
+
+<div class="center-in-center" style="width:450px;position:absolute;height:150px;overflow:hidden">
+
+<form id="seelForm" name="seelForm" method="get" target="_blank"  action="//www.baidu.com/s" >
+<fieldset class="search" style="position:absolute;top: 68%; left: 11%;  ">
+<input id="wd" name="wd" class="box" placeholder="百度" style="float: left; color: rgb(0, 0, 0);font-family:微软雅黑;font-size:18px;padding: 5px ;" type="text">
+<button target="_blank" type="submit"  class=" btn"   value="搜索">
+  </fieldset>
+</form>
+</div>
+<script type="text/javascript">
+ var search =["//www.baidu.com/s","wd","百度","//www.sogou.com/tx","query","搜狗","//list.tmall.com/search_product.htm","q","天猫","  //s.taobao.com/search","q","淘宝" ];
+ var form = document.getElementById("seelForm");
+ var txtbox =form.elements[1];
+ var subtxt ="百度"; 
+ var index=0;
+ var isWheelUp = function(event) {
+    event = event || window.event;
+    var up = true;
+    if(event.wheelDelta){//IE/Opera/Chrome
+     up = event.wheelDelta / 120 == 1 ? true : false;
+    }else{//Firefox
+     up = event.detail / 3 == 1 ? true : false;
+    }
+    return up;
+   };  
+  var mouseWheel = function(event){
+     var wheelUp = isWheelUp(event);
+	 if(wheelUp){
+	 //alert("up");
+	  index-=3;
+	 if(index<0){index=9;}
+	 form.action=search[index];	
+	 txtbox.name =search[index+1];
+	 subtxt =search[index+2];
+	 txtbox.placeholder = subtxt;	
+	 }
+	 else if(!wheelUp){
+	 //alert("down");//list.tmall.com/search_product.htm  //s.taobao.com/search  //www.sogou.com/tx
+	   index+=3;
+	 if(index>=12){index=0;}
+	 form.action=search[index];	
+	 txtbox.name =search[index+1];
+	 subtxt =search[index+2];
+	 txtbox.placeholder = subtxt;
+	 }
+  }; 
+ 
+		 
+   if(document.addEventListener){
+   document.addEventListener('DOMMouseScroll',function(event) { mouseWheel(event); },false);
+   }
+   document.onmousewheel = function(event) { mouseWheel(event); }
+</script>
+<canvas width="1366" height="500" id="canvas3" style="position: absolute; left: 0px; top: 0px;z-index:-1"><p class="nope">No canvas3, no particles</p></canvas>
+<script>
+var Clock = (function() {
+        
+    // private variables
+    var canvas3, // canvas3 element
+        ctx, // canvas3 context
+        bgGrad = true, // background gradient flag
+        gradient, // gradient (background)
+        height = 400, // canvas3 height
+        key = {up: false, shift: false}, // key presses
+        particles = [], // particle array
+        particleColor = 'hsla(0, 0%, 100%, 0.3)', // particle color
+        mouse = {x: 0, y: 0}, // position of mouse / touch
+        press = false, // pressed flag
+        quiver = false, // quiver flag
+        text, // the text to copy pixels from
+        textSize = 140, // (initial) textsize
+        valentine = false, // valentine-ify it for a bit?
+        msgTime = 100, // time to show a message before returning to clock
+        updateColor = true, // update color of gradient / particles with time?
+        width = 800; // canvas3 width
+    
+    // Constants
+    var FRAME_RATE = 20, // frames per second target
+        MIN_WIDTH = 800, // minimum width of canvas3
+        MIN_HEIGHT = 400, // minimum height of canvas3
+        PARTICLE_NUM = 600, // (max) number of particles to generate
+        RADIUS = Math.PI * 2; // radius of particle
+    
+    var defaultStyles = function() {
+        textSize = 140;
+        // particle color
+        particleColor = 'hsla(0, 0%, 100%, 0.3)'; 
+
+        // color stops
+        var gradientStops = { 
+            0: '#333333',
+            0.5: '#222222'
+        };
+
+        // create gradient
+        setGradient(gradientStops);
+    };
+    
+    var draw = function(p) {
+        ctx.fillStyle = particleColor;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, RADIUS, true);
+        ctx.closePath();
+        ctx.fill();
+    };
+    
+    var explode = function() {
+        for(var i = 0, l = particles.length; i < l; i++) {
+            var p = particles[i];
+
+            if(p.inText) {
+
+                var ax = mouse.x - p.px,
+                ay = mouse.y - p.py,
+                angle = Math.atan2(ay, ax),
+                polarity,
+                C = Math.cos(angle),
+                S = Math.sin(angle);
+
+                // change polarity
+                // attract particles if mouse pressed, repel if shift + mousedown
+                polarity = (key.shift === true) ? -1 : 1;
+
+                p.x += polarity * (Math.pow((C-1), 2) -1) + p.velocityX * p.delta;
+                p.y += polarity * (Math.pow((S-1), 2) -1) + p.velocityY * p.delta;
+
+                // set previous positions
+                p.px = p.x;
+                p.py = p.y;
+
+                draw(p);
+            }
+        }
+    };
+
+    var getTime = function(amPM) {
+        var date = new Date(),
+            hours = date.getHours(),
+            timeOfDay = '';
+
+        if(amPM) {
+            hours = ( hours > 12 ) ? hours -= 12 : hours;
+            hours = ( hours == 0 ) ? 12 : hours;
+        } else {
+            hours = pad(hours);
+        }
+
+        var minutes = pad(date.getMinutes());
+        var seconds = pad(date.getSeconds());
+        return {
+            hours: hours,
+            minutes: minutes,
+            seconds: seconds,
+            timeString: hours + " : " + minutes + " : " + seconds
+        };
+    };
+
+    // animation loop
+    var loop = function() {
+      
+        // clear out text
+        ctx.clearRect(0, 0, width, height);
+
+        var time = getTime(true);
+
+        textSize = 140;
+
+        // draw text on canvas3
+        if(valentine === true) {
+            if(msgTime > 0) {
+                textSize = 180;
+                text = '?';
+                msgTime--;
+            } else {
+                text = time.timeString;
+            }
+            // valentine-ify it by setting hue to pink
+            setStyles(300);
+
+        } else if(updateColor === true && bgGrad === true) {
+            // changing color with time
+            // @TODO: come up with something better, this is a hacky implementation
+            var color = time.hours + time.minutes + time.seconds;
+            setStyles(color);
+            text = time.timeString;
+        } else {
+            defaultStyles();
+            text = time.timeString;
+        }
+      
+        ctx.fillStyle = "rgb(255, 255, 255)";
+        ctx.textBaseline = "Bottom";
+        ctx.font = textSize + "px 'Avenir', 'Helvetica Neue', 'Arial', 'sans-serif'";
+        ctx.fillText(text, (width - ctx.measureText(text).width) * 0.5, height * 0.45);
+
+        // copy pixels
+        var imgData = ctx.getImageData(0, 0, width, height);
+      
+        // clear canvas3, again
+        ctx.clearRect(0, 0, width, height);
+
+        if(bgGrad === true) {
+            // draw gradient
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        if(press === false) {
+            // reset particles
+            for(var i = 0, l = particles.length; i < l; i++) {
+                var p = particles[i];
+                p.inText = false;
+            }
+            particleText(imgData);
+        } else {
+            explode();
+        }
+      
+    };
+
+    var pad = function(number) {
+        return ('0' + number).substr(-2);
+    };
+
+    var particleText = function(imgData) {
+
+        var pxls = [];
+        for(var w = width; w > 0; w-=6) {
+            for(var h = 0; h < width; h+=6) {
+                var index = (w+h*(width))*4;
+                if(imgData.data[index] > 10) {
+                    pxls.push([w, h]);
+                }
+            }
+        }
+
+        var count = pxls.length;
+        for(var i = 0; i < pxls.length && i < particles.length; i++) {
+            try {
+                var p = particles[i], 
+                    X, 
+                    Y;
+                
+                if(quiver) {
+                    X = (pxls[count-1][0]) - (p.px + Math.random() * 5);
+                    Y = (pxls[count-1][1]) - (p.py + Math.random() * 5);
+                } else {
+                    X = (pxls[count-1][0]) - p.px;
+                    Y = (pxls[count-1][1]) - p.py;
+                }
+          
+                // tangent
+                var T = Math.sqrt(X*X + Y*Y);
+
+                // arctangent
+                var A = Math.atan2(Y, X);
+              
+                // cosine
+                var C = Math.cos(A);
+              
+                // sine
+                var S = Math.sin(A);
+              
+                // set new postition
+                p.x = p.px + C * T * p.delta;
+                p.y = p.py + S * T * p.delta;
+              
+                // set previous positions
+                p.px = p.x;
+                p.py = p.y;
+          
+                p.inText = true;
+          
+                // draw the particle
+                draw(p);
+          
+                if(key.up === true) {
+                    p.size += 0.3;
+                } else {
+                    var newSize = p.size - 0.5;
+                    if(newSize > p.origSize && newSize > 0) {
+                        p.size = newSize;
+                    } else {
+                        p.size = m.origSize;
+                    }
+                }
+            } catch(e) {
+                //console.log(e);
+            }
+            count--;
+        }
+    };
+
+  
+    // set dimensions of canvas3
+    var setDimensions = function () {
+        width = Math.max(window.innerWidth, MIN_WIDTH);
+        height = Math.max(window.innerHeight, MIN_HEIGHT);
+        window.resizeTo(800,400); 
+		
+        // Resize the canvas3
+        canvas3.width = width;
+        canvas3.height = height;
+
+        canvas3.style.position = 'absolute';
+        canvas3.style.left = '0px';
+        canvas3.style.top = '0px';
+    };
+
+    var setGradient = function(gradientStops) {
+      
+        // create gradient
+        gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width);
+      
+        // iterate through colorstops
+        for (var position in gradientStops) {
+            var color = gradientStops[position];
+            gradient.addColorStop(position, color);
+        }
+    };
+
+    var setStyles = function(hue) {
+        // color stops
+        var gradientStops = { 
+            0: 'hsl(' + hue + ', 100%, 100%)',
+            0.5: 'hsl(' + hue +', 10%, 50%)'
+        };
+
+        // change particle color
+        particleColor = 'hsla(' + hue + ', 10%, 50%, 0.3)';
+
+        // create gradient
+        setGradient(gradientStops);
+    };
+
+    /** 
+     * Public Methods
+     */
+    return {
+
+        init: function(canvas3ID) {
+        
+            canvas3 = document.getElementById(canvas3ID);
+            // make sure canvas3 exists and that the browser understands it
+            if(canvas3 === null || !canvas3.getContext) {
+                return;
+            }
+            // set context
+            ctx = canvas3.getContext("2d");
+      
+            // set dimensions
+            setDimensions();
+        
+            // ui
+            this.ui();
+        
+            for(var i = 0; i < PARTICLE_NUM; i++) {
+                particles[i] = new Particle(canvas3);
+            }   
+        
+            // show FPS
+            FPS.initialize(canvas3, 'fps');
+        
+            // set defaults
+            defaultStyles();
+        
+            // let's do this
+            setInterval(loop, FRAME_RATE);
+        
+        },
+      
+        ui: function() {
+        
+            // UI: buttons and events
+            
+        
+            /**
+             * Events
+             */
+           
+        
+             quiver = true;
+             bgGrad = true;
+             valentine = false;
+             updateColor = true;
+            
+        
+            
+        
+            document.addEventListener('keydown', function(e) {
+                switch(e.keyCode ) {
+                    case 16: // shift
+                        key.shift = true;
+                        e.preventDefault();
+                        break;
+                    case 38: // up key
+                        key.up = true;
+                        e.preventDefault();
+                        break;
+                }
+            }, false);
+        
+            document.addEventListener('keyup', function(e) {
+                switch(e.keyCode ) {
+                    case 16: // shift
+                        key.shift = false;
+                        e.preventDefault();
+                        break;
+                    case 38: // space
+                        key.up = false;
+                        e.preventDefault();
+                        break;
+                }
+            }, false);
+
+            window.addEventListener('resize', function(e){
+                setDimensions();
+            }, false);
+        
+            
+          
+        
+            
+			document.addEventListener('click', function(e) {
+                //e.preventDefault();
+                if( press == true) {
+                    press = false;
+					mouse.x=Math.ceil(Math.random()*1300);
+					mouse.y=Math.ceil(Math.random()*600);
+                } else {
+                    press = true;
+					mouse.x=Math.ceil(Math.random()*1300);
+					mouse.y=Math.ceil(Math.random()*600);
+                }
+            }, false);
+			// @TODO: add touch events
+        
+        }
+      
+    };
+    
+  })();
+  
+  // Create new particles
+  var Particle = function(canvas3) {
+  
+        var range = Math.random() * 180 / Math.PI, // random starting point
+            spread = canvas3.height, // how far away from text should the particles begin?
+            size = Math.random() * 7; // random size of particle
+    
+        this.delta = 0.25;
+        this.x = 0;
+        this.y = 0;
+    
+        // starting positions
+        this.px = (canvas3.width / 2) + (Math.cos(range) * spread);
+        this.py = (canvas3.height / 2) + (Math.sin(range) * spread);
+    
+        this.velocityX = Math.floor(Math.random() * 10) - 5;
+        this.velocityY = Math.floor(Math.random() * 10) - 5;
+    
+        this.size  = size;
+        this.origSize = size;
+    
+        this.inText = false;
+    
+  };
+  
+  var FPS = {
+
+    // defaults
+    delta: 0,
+    lastTime: 0,
+    frames: 0,
+    totalTime: 0,
+    updateTime: 0,
+    updateFrames: 0,
+
+    initialize: function(canvas3ID, fpsID) {
+        this.lastTime = (new Date()).getTime();
+        if(!document.getElementById(fpsID) && document.getElementById(canvas3ID)) {
+            this.createFPS(canvas3ID, fpsID);
+        }
+    },
+
+    
+
+};
+
+Clock.init('canvas3');
+</script>
+
 <canvas id="canvas" style="width:100%;height:97%;"></canvas>
 	<script>
 		//定义画布宽高和生成点的个数
@@ -157,305 +655,5 @@ fieldset.search:hover {
 		}
 
 	</script>
-
-
-<div class="center-in-center" style="width:450px;position:absolute;height:150;overflow:hidden">
-<canvas id="canvas_2"  style="width:450px;position:absolute;top: 0; left: 1px;  ">当前浏览器不支持canvas，请更换浏览器后再试</canvas>
-<form id="seelForm" name="seelForm" method="get" target="_blank"  action="//www.baidu.com/s" >
-<fieldset class="search" style="position:absolute;top: 68%; left: 11%;  ">
-<input id="wd" name="wd" class="box" placeholder="百度" style="float: left; color: rgb(0, 0, 0);font-family:微软雅黑;font-size:18px;padding: 5px ;" type="text">
-<button target="_blank" type="submit"  class=" btn"   value="搜索">
-  </fieldset>
-</form>
-</div>
-<script type="text/javascript">
- var search =["//www.baidu.com/s","wd","百度","//www.sogou.com/tx","query","搜狗","//list.tmall.com/search_product.htm","q","天猫","  //s.taobao.com/search","q","淘宝" ];
- var form = document.getElementById("seelForm");
- var txtbox =form.elements[1];
- var subtxt ="百度"; 
- var index=0;
- var isWheelUp = function(event) {
-    event = event || window.event;
-    var up = true;
-    if(event.wheelDelta){//IE/Opera/Chrome
-     up = event.wheelDelta / 120 == 1 ? true : false;
-    }else{//Firefox
-     up = event.detail / 3 == 1 ? true : false;
-    }
-    return up;
-   };  
-  var mouseWheel = function(event){
-     var wheelUp = isWheelUp(event);
-	 if(wheelUp){
-	 //alert("up");
-	  index-=3;
-	 if(index<0){index=9;}
-	 form.action=search[index];	
-	 txtbox.name =search[index+1];
-	 subtxt =search[index+2];
-	 txtbox.placeholder = subtxt;	
-	 }
-	 else if(!wheelUp){
-	 //alert("down");//list.tmall.com/search_product.htm  //s.taobao.com/search  //www.sogou.com/tx
-	   index+=3;
-	 if(index>=12){index=0;}
-	 form.action=search[index];	
-	 txtbox.name =search[index+1];
-	 subtxt =search[index+2];
-	 txtbox.placeholder = subtxt;
-	 }
-  }; 
-   if(document.addEventListener){
-   document.addEventListener('DOMMouseScroll',function(event) { mouseWheel(event); },false);
-   }
-   document.onmousewheel = function(event) { mouseWheel(event); }
-</script>
-<script>
-	var digit=
-    [
-        [
-            [0,0,1,1,1,0,0],
-            [0,1,1,0,1,1,0],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [0,1,1,0,1,1,0],
-            [0,0,1,1,1,0,0]
-        ],//0
-        [
-            [0,0,0,1,1,0,0],
-            [0,1,1,1,1,0,0],
-            [0,0,0,1,1,0,0],
-            [0,0,0,1,1,0,0],
-            [0,0,0,1,1,0,0],
-            [0,0,0,1,1,0,0],
-            [0,0,0,1,1,0,0],
-            [0,0,0,1,1,0,0],
-            [0,0,0,1,1,0,0],
-            [1,1,1,1,1,1,1]
-        ],//1
-        [
-            [0,1,1,1,1,1,0],
-            [1,1,0,0,0,1,1],
-            [0,0,0,0,0,1,1],
-            [0,0,0,0,1,1,0],
-            [0,0,0,1,1,0,0],
-            [0,0,1,1,0,0,0],
-            [0,1,1,0,0,0,0],
-            [1,1,0,0,0,0,0],
-            [1,1,0,0,0,1,1],
-            [1,1,1,1,1,1,1]
-        ],//2
-        [
-            [1,1,1,1,1,1,1],
-            [0,0,0,0,0,1,1],
-            [0,0,0,0,1,1,0],
-            [0,0,0,1,1,0,0],
-            [0,0,1,1,1,0,0],
-            [0,0,0,0,1,1,0],
-            [0,0,0,0,0,1,1],
-            [0,0,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [0,1,1,1,1,1,0]
-        ],//3
-        [
-            [0,0,0,0,1,1,0],
-            [0,0,0,1,1,1,0],
-            [0,0,1,1,1,1,0],
-            [0,1,1,0,1,1,0],
-            [1,1,0,0,1,1,0],
-            [1,1,1,1,1,1,1],
-            [0,0,0,0,1,1,0],
-            [0,0,0,0,1,1,0],
-            [0,0,0,0,1,1,0],
-            [0,0,0,1,1,1,1]
-        ],//4
-        [
-            [1,1,1,1,1,1,1],
-            [1,1,0,0,0,0,0],
-            [1,1,0,0,0,0,0],
-            [1,1,1,1,1,1,0],
-            [0,0,0,0,0,1,1],
-            [0,0,0,0,0,1,1],
-            [0,0,0,0,0,1,1],
-            [0,0,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [0,1,1,1,1,1,0]
-        ],//5
-        [
-            [0,0,0,0,1,1,0],
-            [0,0,1,1,0,0,0],
-            [0,1,1,0,0,0,0],
-            [1,1,0,0,0,0,0],
-            [1,1,0,1,1,1,0],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [0,1,1,1,1,1,0]
-        ],//6
-        [
-            [1,1,1,1,1,1,1],
-            [1,1,0,0,0,1,1],
-            [0,0,0,0,1,1,0],
-            [0,0,0,0,1,1,0],
-            [0,0,0,1,1,0,0],
-            [0,0,0,1,1,0,0],
-            [0,0,1,1,0,0,0],
-            [0,0,1,1,0,0,0],
-            [0,0,1,1,0,0,0],
-            [0,0,1,1,0,0,0]
-        ],//7
-        [
-            [0,1,1,1,1,1,0],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [0,1,1,1,1,1,0],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [0,1,1,1,1,1,0]
-        ],//8
-        [
-            [0,1,1,1,1,1,0],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [1,1,0,0,0,1,1],
-            [0,1,1,1,0,1,1],
-            [0,0,0,0,0,1,1],
-            [0,0,0,0,0,1,1],
-            [0,0,0,0,1,1,0],
-            [0,0,0,1,1,0,0],
-            [0,1,1,0,0,0,0]
-        ],//9
-        [
-            [0,0,0,0,0,0,0],
-            [0,0,1,1,1,0,0],
-            [0,0,1,1,1,0,0],
-            [0,0,1,1,1,0,0],
-            [0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0],
-            [0,0,1,1,1,0,0],
-            [0,0,1,1,1,0,0],
-            [0,0,1,1,1,0,0],
-            [0,0,0,0,0,0,0]
-        ]//:
-    ];
-	var canvas2 = document.getElementById('canvas_2');
-	if(canvas2.getContext){
-		var cxt = canvas2.getContext('2d');
-	}
-    //声明canvas的宽高
-    var H = 100,W = 700;
-	canvas2.height = H;
-	canvas2.width = W;
-	//存储时间数据
-	var data = [];
-	//存储运动的小球
-	var balls = [];
-	//设置粒子半径
-	var R = canvas2.height/20-1;
-	(function(){
-		var temp = /(\d)(\d):(\d)(\d):(\d)(\d)/.exec(new Date());
-		//存储时间数字，由十位小时、个位小时、冒号、十位分钟、个位分钟、冒号、十位秒钟、个位秒钟这7个数字组成
-		data.push(temp[1],temp[2],10,temp[3],temp[4],10,temp[5],temp[6]);	
-	})();
-	/*生成点阵数字*/
-	function renderDigit(index,num){
-		for(var i = 0; i < digit[num].length; i++){
-			for(var j = 0; j < digit[num][i].length; j++){
-				if(digit[num][i][j] == 1){
-					cxt.beginPath();
-					cxt.arc(14*(R+2)*index + j*2*(R+1)+(R+1),i*2*(R+1)+(R+1),R,0,2*Math.PI);
-					cxt.closePath();
-					cxt.fillStyle="#7D7B7B";
-					cxt.fill();
-				}
-			}
-		}		
-	}
-	/*更新时钟*/
-	function updateDigitTime(){
-		var changeNumArray = [];
-		var temp = /(\d)(\d):(\d)(\d):(\d)(\d)/.exec(new Date());
-		var NewData = [];
-		NewData.push(temp[1],temp[2],10,temp[3],temp[4],10,temp[5],temp[6]);
-		for(var i = data.length-1; i >=0 ; i--){
-			//时间发生变化 
-			if(NewData[i] !== data[i]){
-				//将变化的数字值和在data数组中的索引存储在changeNumArray数组中
-				changeNumArray.push(i+'_'+(Number(data[i])+1)%10);
-			}
-		}
-		//增加小球
-		for(var i = 0; i< changeNumArray.length; i++){
-			addBalls.apply(this,changeNumArray[i].split('_'));
-		}	
-		data = NewData.concat();
-	}
-	/*更新小球状态*/
-	function updateBalls(){
-		for(var i = 0; i < balls.length; i++){
-			balls[i].stepY += balls[i].disY;
-			balls[i].x += balls[i].stepX;
-			balls[i].y += balls[i].stepY;	
-			if(balls[i].x > W + R || balls[i].y > H + R){
-				balls.splice(i,1);
-				i--;
-			}				
-		}
-	}
-	/*增加要运动的小球*/
-	function addBalls(index,num){
-		var numArray = [1,2,3];
-		var colorArray =  ["#3BE","#09C","#A6C","#93C","#9C0","#690","#FB3","#F80","#F44","#C00"];
-		for(var i = 0; i < digit[num].length; i++){
-			for(var j = 0; j < digit[num][i].length; j++){
-				if(digit[num][i][j] == 1){
-					var ball = {
-						x:14*(R+2)*index + j*2*(R+1)+(R+1),
-						y:i*2*(R+1)+(R+1),
-						stepX:Math.floor(Math.random() * 4 -2),
-						stepY:-2*numArray[Math.floor(Math.random()*numArray.length)],
-						color:colorArray[Math.floor(Math.random()*colorArray.length)],
-						disY:1
-					};
-					balls.push(ball);			
-				}
-			}
-		}	
-	}
-	/*渲染*/
-	function render(){
-	    //重置画布宽度，达到清空画布的效果
-		canvas2.height = 100;
-		//渲染时钟
-		for(var i = 0; i < data.length; i++){
-			renderDigit(i,data[i]);
-		}		
-		//渲染小球
-		for(var i = 0; i < balls.length; i++){
-			cxt.beginPath();
-			cxt.arc(balls[i].x,balls[i].y,R,0,2*Math.PI);
-			cxt.fillStyle = balls[i].color;
-			cxt.closePath();
-			cxt.fill();				
-		}
-	}
-	clearInterval(oTimer);
-	var oTimer = setInterval(function(){
-		//更新时钟
-		updateDigitTime();
-		//更新小球状态
-		updateBalls();
-		//渲染
-		render();
-	},50);
-</script>
 </body>
 </html>
