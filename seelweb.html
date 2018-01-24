@@ -1,11 +1,8 @@
-
 <html>
 <head>
-<title>web page</title>
+<title>seel page</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
 </head>
-
 <body>
 <style  type="text/css">
 body{
@@ -52,16 +49,15 @@ fieldset.search:hover {
 }
  .center-in-center{   
     position: absolute;   
-    top: 50%;   
+    top: 45%;   
     left: 50%;   
     transform: translate(-50%, -50%);   
 }
-
 </style>
 <canvas id="canvas" style="width:100%;height:97%;"></canvas>
 	<script>
 		//定义画布宽高和生成点的个数
-		var WIDTH = window.innerWidth, HEIGHT = window.innerHeight, POINT = 35;
+		var WIDTH = 1366, HEIGHT = 608, POINT = 35;
 		
 		var canvas = document.getElementById('canvas');
 		canvas.width = WIDTH,
@@ -121,7 +117,6 @@ fieldset.search:hover {
 			}
 			draw();
 		}
-
 		//每帧绘制
 		function draw () {
 			context.clearRect(0,0,canvas.width, canvas.height);
@@ -143,7 +138,6 @@ fieldset.search:hover {
 				}
 			}
 		}
-
 		//调用执行
 		window.onload = function () {
 			init();
@@ -163,8 +157,59 @@ fieldset.search:hover {
 		}
 
 	</script>
-<canvas id="canvas_2" style="width:450px;position:absolute;top: 30%; left: 35%;  ">当前浏览器不支持canvas，请更换浏览器后再试</canvas>
 
+
+<div class="center-in-center" style="width:450px;position:absolute;height:150;overflow:hidden">
+<canvas id="canvas_2"  style="width:450px;position:absolute;top: 0; left: 1px;  ">当前浏览器不支持canvas，请更换浏览器后再试</canvas>
+<form id="seelForm" name="seelForm" method="get" target="_blank"  action="//www.baidu.com/s" >
+<fieldset class="search" style="position:absolute;top: 68%; left: 11%;  ">
+<input id="wd" name="wd" class="box" placeholder="百度" style="float: left; color: rgb(0, 0, 0);font-family:微软雅黑;font-size:18px;padding: 5px ;" type="text">
+<button target="_blank" type="submit"  class=" btn"   value="搜索">
+  </fieldset>
+</form>
+</div>
+<script type="text/javascript">
+ var search =["//www.baidu.com/s","wd","百度","//www.sogou.com/tx","query","搜狗","//list.tmall.com/search_product.htm","q","天猫","  //s.taobao.com/search","q","淘宝" ];
+ var form = document.getElementById("seelForm");
+ var txtbox =form.elements[1];
+ var subtxt ="百度"; 
+ var index=0;
+ var isWheelUp = function(event) {
+    event = event || window.event;
+    var up = true;
+    if(event.wheelDelta){//IE/Opera/Chrome
+     up = event.wheelDelta / 120 == 1 ? true : false;
+    }else{//Firefox
+     up = event.detail / 3 == 1 ? true : false;
+    }
+    return up;
+   };  
+  var mouseWheel = function(event){
+     var wheelUp = isWheelUp(event);
+	 if(wheelUp){
+	 //alert("up");
+	  index-=3;
+	 if(index<0){index=9;}
+	 form.action=search[index];	
+	 txtbox.name =search[index+1];
+	 subtxt =search[index+2];
+	 txtbox.placeholder = subtxt;	
+	 }
+	 else if(!wheelUp){
+	 //alert("down");//list.tmall.com/search_product.htm  //s.taobao.com/search  //www.sogou.com/tx
+	   index+=3;
+	 if(index>=12){index=0;}
+	 form.action=search[index];	
+	 txtbox.name =search[index+1];
+	 subtxt =search[index+2];
+	 txtbox.placeholder = subtxt;
+	 }
+  }; 
+   if(document.addEventListener){
+   document.addEventListener('DOMMouseScroll',function(event) { mouseWheel(event); },false);
+   }
+   document.onmousewheel = function(event) { mouseWheel(event); }
+</script>
 <script>
 	var digit=
     [
@@ -320,7 +365,6 @@ fieldset.search:hover {
 		//存储时间数字，由十位小时、个位小时、冒号、十位分钟、个位分钟、冒号、十位秒钟、个位秒钟这7个数字组成
 		data.push(temp[1],temp[2],10,temp[3],temp[4],10,temp[5],temp[6]);	
 	})();
-
 	/*生成点阵数字*/
 	function renderDigit(index,num){
 		for(var i = 0; i < digit[num].length; i++){
@@ -335,7 +379,6 @@ fieldset.search:hover {
 			}
 		}		
 	}
-
 	/*更新时钟*/
 	function updateDigitTime(){
 		var changeNumArray = [];
@@ -355,7 +398,6 @@ fieldset.search:hover {
 		}	
 		data = NewData.concat();
 	}
-
 	/*更新小球状态*/
 	function updateBalls(){
 		for(var i = 0; i < balls.length; i++){
@@ -368,7 +410,6 @@ fieldset.search:hover {
 			}				
 		}
 	}
-
 	/*增加要运动的小球*/
 	function addBalls(index,num){
 		var numArray = [1,2,3];
@@ -389,7 +430,6 @@ fieldset.search:hover {
 			}
 		}	
 	}
-
 	/*渲染*/
 	function render(){
 	    //重置画布宽度，达到清空画布的效果
@@ -407,7 +447,6 @@ fieldset.search:hover {
 			cxt.fill();				
 		}
 	}
-
 	clearInterval(oTimer);
 	var oTimer = setInterval(function(){
 		//更新时钟
@@ -417,64 +456,6 @@ fieldset.search:hover {
 		//渲染
 		render();
 	},50);
-</script>
-
-
-<form id="seelForm" name="seelForm" method="get" target="_blank"  action="//www.baidu.com/s" class="center-in-center">
-
-<fieldset class="search">
-<input id="wd" name="wd" class="box" placeholder="百度" style="float: left; color: rgb(0, 0, 0);font-family:微软雅黑;font-size:18px;padding: 5px ;" type="text">
-
-<button target="_blank" type="submit"  class=" btn"   value="搜索">
-  </fieldset>
-</form>
-
-<script type="text/javascript">
- var search =["//www.baidu.com/s","wd","百度","//www.sogou.com/tx","query","搜狗","//list.tmall.com/search_product.htm","q","天猫","  //s.taobao.com/search","q","淘宝" ];
- var form = document.getElementById("seelForm");
- var txtbox =form.elements[1];
- var subtxt ="百度"; 
- var index=0;
-
- var isWheelUp = function(event) {
-    event = event || window.event;
-    var up = true;
-    if(event.wheelDelta){//IE/Opera/Chrome
-     up = event.wheelDelta / 120 == 1 ? true : false;
-    }else{//Firefox
-     up = event.detail / 3 == 1 ? true : false;
-    }
-    return up;
-   };
-   
-  var mouseWheel = function(event){
-     var wheelUp = isWheelUp(event);
-	 if(wheelUp){
-	 //alert("up");
-	  index-=3;
-	 if(index<0){index=9;}
-	 form.action=search[index];	
-	 txtbox.name =search[index+1];
-	 subtxt =search[index+2];
-	 txtbox.placeholder = subtxt;
-	
-	 }
-	 else if(!wheelUp){
-	 //alert("down");//list.tmall.com/search_product.htm  //s.taobao.com/search  //www.sogou.com/tx
-	   index+=3;
-	 if(index>=12){index=0;}
-	 form.action=search[index];	
-	 txtbox.name =search[index+1];
-	 subtxt =search[index+2];
-	 txtbox.placeholder = subtxt;
-	 }
-  };
-  
-  
-   if(document.addEventListener){
-    document.addEventListener('DOMMouseScroll',function(event) { mouseWheel(event); },false);
-   }
-   document.onmousewheel = function(event) { mouseWheel(event); }
 </script>
 </body>
 </html>
