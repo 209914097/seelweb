@@ -1,0 +1,480 @@
+
+<html>
+<head>
+<title>web page</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+</head>
+
+<body>
+<style  type="text/css">
+body{
+background:#F1F7FB;
+}
+fieldset.search {
+    padding: 0px;
+    border: none;
+    width: 326px;
+	height: 34px;
+    background:#e0e0e0;
+}
+ 
+fieldset.search:hover {
+    background: #a8a8a8;
+}
+.search input, .search button {
+    border: none;
+    float: left;
+}
+.search input.box {
+    height: 32px;
+    width: 290;
+    margin-right: 0px;
+    padding-right: 0px;
+    background: #e0e0e0;
+    margin: 1px;
+}
+.search input.box:focus {
+    background: #e8e8e8 ;
+    outline: none;
+}
+.search button.btn {
+    border: none;
+    width: 32px;
+    height: 32px;
+    margin: 0px auto;
+    margin: 1px;
+    background: url(search_blue.png) no-repeat center ;
+}
+.search button.btn:hover {
+
+    background: url(search_black.png) no-repeat center;
+}
+ .center-in-center{   
+    position: absolute;   
+    top: 50%;   
+    left: 50%;   
+    transform: translate(-50%, -50%);   
+}
+
+</style>
+<canvas id="canvas" style="width:100%;height:97%;"></canvas>
+	<script>
+		//定义画布宽高和生成点的个数
+		var WIDTH = window.innerWidth, HEIGHT = window.innerHeight, POINT = 35;
+		
+		var canvas = document.getElementById('canvas');
+		canvas.width = WIDTH,
+		canvas.height = HEIGHT;
+		var context = canvas.getContext('2d');
+		context.strokeStyle = 'rgba(0,0,0,0.02)',
+		context.strokeWidth = 1,
+		context.fillStyle = 'rgba(0,0,0,0.05)';
+		var circleArr = [];
+
+		//线条：开始xy坐标，结束xy坐标，线条透明度
+		function Line (x, y, _x, _y, o) {
+			this.beginX = x,
+			this.beginY = y,
+			this.closeX = _x,
+			this.closeY = _y,
+			this.o = o;
+		}
+		//点：圆心xy坐标，半径，每帧移动xy的距离
+		function Circle (x, y, r, moveX, moveY) {
+			this.x = x,
+			this.y = y,
+			this.r = r,
+			this.moveX = moveX,
+			this.moveY = moveY;
+		}
+		//生成max和min之间的随机数
+		function num (max, _min) {
+			var min = arguments[1] || 0;
+			return Math.floor(Math.random()*(max-min+1)+min);
+		}
+		// 绘制原点
+		function drawCricle (cxt, x, y, r, moveX, moveY) {
+			var circle = new Circle(x, y, r, moveX, moveY)
+			cxt.beginPath()
+			cxt.arc(circle.x, circle.y, circle.r, 0, 2*Math.PI)
+			cxt.closePath()
+			cxt.fill();
+			return circle;
+		}
+		//绘制线条
+		function drawLine (cxt, x, y, _x, _y, o) {
+			var line = new Line(x, y, _x, _y, o)
+			cxt.beginPath()
+			cxt.strokeStyle = 'rgba(0,0,0,'+ o +')'
+			cxt.moveTo(line.beginX, line.beginY)
+			cxt.lineTo(line.closeX, line.closeY)
+			cxt.closePath()
+			cxt.stroke();
+
+		}
+		//初始化生成原点
+		function init () {
+			circleArr = [];
+			for (var i = 0; i < POINT; i++) {
+				circleArr.push(drawCricle(context, num(WIDTH), num(HEIGHT), num(15, 2), num(10, -10)/40, num(10, -10)/40));
+			}
+			draw();
+		}
+
+		//每帧绘制
+		function draw () {
+			context.clearRect(0,0,canvas.width, canvas.height);
+			for (var i = 0; i < POINT; i++) {
+				drawCricle(context, circleArr[i].x, circleArr[i].y, circleArr[i].r);
+			}
+			for (var i = 0; i < POINT; i++) {
+				for (var j = 0; j < POINT; j++) {
+					if (i + j < POINT) {
+						var A = Math.abs(circleArr[i+j].x - circleArr[i].x),
+							B = Math.abs(circleArr[i+j].y - circleArr[i].y);
+						var lineLength = Math.sqrt(A*A + B*B);
+						var C = 1/lineLength*7-0.009;
+						var lineOpacity = C > 0.03 ? 0.03 : C;
+						if (lineOpacity > 0) {
+							drawLine(context, circleArr[i].x, circleArr[i].y, circleArr[i+j].x, circleArr[i+j].y, lineOpacity);
+						}
+					}
+				}
+			}
+		}
+
+		//调用执行
+		window.onload = function () {
+			init();
+			setInterval(function () {
+				for (var i = 0; i < POINT; i++) {
+					var cir = circleArr[i];
+					cir.x += cir.moveX;
+					cir.y += cir.moveY;
+					if (cir.x > WIDTH) cir.x = 0;
+					else if (cir.x < 0) cir.x = WIDTH;
+					if (cir.y > HEIGHT) cir.y = 0;
+					else if (cir.y < 0) cir.y = HEIGHT;
+					
+				}
+				draw();
+			}, 16);
+		}
+
+	</script>
+<canvas id="canvas_2" style="width:450px;position:absolute;top: 30%; left: 35%;  ">当前浏览器不支持canvas，请更换浏览器后再试</canvas>
+
+<script>
+	var digit=
+    [
+        [
+            [0,0,1,1,1,0,0],
+            [0,1,1,0,1,1,0],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [0,1,1,0,1,1,0],
+            [0,0,1,1,1,0,0]
+        ],//0
+        [
+            [0,0,0,1,1,0,0],
+            [0,1,1,1,1,0,0],
+            [0,0,0,1,1,0,0],
+            [0,0,0,1,1,0,0],
+            [0,0,0,1,1,0,0],
+            [0,0,0,1,1,0,0],
+            [0,0,0,1,1,0,0],
+            [0,0,0,1,1,0,0],
+            [0,0,0,1,1,0,0],
+            [1,1,1,1,1,1,1]
+        ],//1
+        [
+            [0,1,1,1,1,1,0],
+            [1,1,0,0,0,1,1],
+            [0,0,0,0,0,1,1],
+            [0,0,0,0,1,1,0],
+            [0,0,0,1,1,0,0],
+            [0,0,1,1,0,0,0],
+            [0,1,1,0,0,0,0],
+            [1,1,0,0,0,0,0],
+            [1,1,0,0,0,1,1],
+            [1,1,1,1,1,1,1]
+        ],//2
+        [
+            [1,1,1,1,1,1,1],
+            [0,0,0,0,0,1,1],
+            [0,0,0,0,1,1,0],
+            [0,0,0,1,1,0,0],
+            [0,0,1,1,1,0,0],
+            [0,0,0,0,1,1,0],
+            [0,0,0,0,0,1,1],
+            [0,0,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [0,1,1,1,1,1,0]
+        ],//3
+        [
+            [0,0,0,0,1,1,0],
+            [0,0,0,1,1,1,0],
+            [0,0,1,1,1,1,0],
+            [0,1,1,0,1,1,0],
+            [1,1,0,0,1,1,0],
+            [1,1,1,1,1,1,1],
+            [0,0,0,0,1,1,0],
+            [0,0,0,0,1,1,0],
+            [0,0,0,0,1,1,0],
+            [0,0,0,1,1,1,1]
+        ],//4
+        [
+            [1,1,1,1,1,1,1],
+            [1,1,0,0,0,0,0],
+            [1,1,0,0,0,0,0],
+            [1,1,1,1,1,1,0],
+            [0,0,0,0,0,1,1],
+            [0,0,0,0,0,1,1],
+            [0,0,0,0,0,1,1],
+            [0,0,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [0,1,1,1,1,1,0]
+        ],//5
+        [
+            [0,0,0,0,1,1,0],
+            [0,0,1,1,0,0,0],
+            [0,1,1,0,0,0,0],
+            [1,1,0,0,0,0,0],
+            [1,1,0,1,1,1,0],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [0,1,1,1,1,1,0]
+        ],//6
+        [
+            [1,1,1,1,1,1,1],
+            [1,1,0,0,0,1,1],
+            [0,0,0,0,1,1,0],
+            [0,0,0,0,1,1,0],
+            [0,0,0,1,1,0,0],
+            [0,0,0,1,1,0,0],
+            [0,0,1,1,0,0,0],
+            [0,0,1,1,0,0,0],
+            [0,0,1,1,0,0,0],
+            [0,0,1,1,0,0,0]
+        ],//7
+        [
+            [0,1,1,1,1,1,0],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [0,1,1,1,1,1,0],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [0,1,1,1,1,1,0]
+        ],//8
+        [
+            [0,1,1,1,1,1,0],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [1,1,0,0,0,1,1],
+            [0,1,1,1,0,1,1],
+            [0,0,0,0,0,1,1],
+            [0,0,0,0,0,1,1],
+            [0,0,0,0,1,1,0],
+            [0,0,0,1,1,0,0],
+            [0,1,1,0,0,0,0]
+        ],//9
+        [
+            [0,0,0,0,0,0,0],
+            [0,0,1,1,1,0,0],
+            [0,0,1,1,1,0,0],
+            [0,0,1,1,1,0,0],
+            [0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0],
+            [0,0,1,1,1,0,0],
+            [0,0,1,1,1,0,0],
+            [0,0,1,1,1,0,0],
+            [0,0,0,0,0,0,0]
+        ]//:
+    ];
+	var canvas2 = document.getElementById('canvas_2');
+	if(canvas2.getContext){
+		var cxt = canvas2.getContext('2d');
+	}
+    //声明canvas的宽高
+    var H = 100,W = 700;
+	canvas2.height = H;
+	canvas2.width = W;
+	//存储时间数据
+	var data = [];
+	//存储运动的小球
+	var balls = [];
+	//设置粒子半径
+	var R = canvas2.height/20-1;
+	(function(){
+		var temp = /(\d)(\d):(\d)(\d):(\d)(\d)/.exec(new Date());
+		//存储时间数字，由十位小时、个位小时、冒号、十位分钟、个位分钟、冒号、十位秒钟、个位秒钟这7个数字组成
+		data.push(temp[1],temp[2],10,temp[3],temp[4],10,temp[5],temp[6]);	
+	})();
+
+	/*生成点阵数字*/
+	function renderDigit(index,num){
+		for(var i = 0; i < digit[num].length; i++){
+			for(var j = 0; j < digit[num][i].length; j++){
+				if(digit[num][i][j] == 1){
+					cxt.beginPath();
+					cxt.arc(14*(R+2)*index + j*2*(R+1)+(R+1),i*2*(R+1)+(R+1),R,0,2*Math.PI);
+					cxt.closePath();
+					cxt.fillStyle="#7D7B7B";
+					cxt.fill();
+				}
+			}
+		}		
+	}
+
+	/*更新时钟*/
+	function updateDigitTime(){
+		var changeNumArray = [];
+		var temp = /(\d)(\d):(\d)(\d):(\d)(\d)/.exec(new Date());
+		var NewData = [];
+		NewData.push(temp[1],temp[2],10,temp[3],temp[4],10,temp[5],temp[6]);
+		for(var i = data.length-1; i >=0 ; i--){
+			//时间发生变化 
+			if(NewData[i] !== data[i]){
+				//将变化的数字值和在data数组中的索引存储在changeNumArray数组中
+				changeNumArray.push(i+'_'+(Number(data[i])+1)%10);
+			}
+		}
+		//增加小球
+		for(var i = 0; i< changeNumArray.length; i++){
+			addBalls.apply(this,changeNumArray[i].split('_'));
+		}	
+		data = NewData.concat();
+	}
+
+	/*更新小球状态*/
+	function updateBalls(){
+		for(var i = 0; i < balls.length; i++){
+			balls[i].stepY += balls[i].disY;
+			balls[i].x += balls[i].stepX;
+			balls[i].y += balls[i].stepY;	
+			if(balls[i].x > W + R || balls[i].y > H + R){
+				balls.splice(i,1);
+				i--;
+			}				
+		}
+	}
+
+	/*增加要运动的小球*/
+	function addBalls(index,num){
+		var numArray = [1,2,3];
+		var colorArray =  ["#3BE","#09C","#A6C","#93C","#9C0","#690","#FB3","#F80","#F44","#C00"];
+		for(var i = 0; i < digit[num].length; i++){
+			for(var j = 0; j < digit[num][i].length; j++){
+				if(digit[num][i][j] == 1){
+					var ball = {
+						x:14*(R+2)*index + j*2*(R+1)+(R+1),
+						y:i*2*(R+1)+(R+1),
+						stepX:Math.floor(Math.random() * 4 -2),
+						stepY:-2*numArray[Math.floor(Math.random()*numArray.length)],
+						color:colorArray[Math.floor(Math.random()*colorArray.length)],
+						disY:1
+					};
+					balls.push(ball);			
+				}
+			}
+		}	
+	}
+
+	/*渲染*/
+	function render(){
+	    //重置画布宽度，达到清空画布的效果
+		canvas2.height = 100;
+		//渲染时钟
+		for(var i = 0; i < data.length; i++){
+			renderDigit(i,data[i]);
+		}		
+		//渲染小球
+		for(var i = 0; i < balls.length; i++){
+			cxt.beginPath();
+			cxt.arc(balls[i].x,balls[i].y,R,0,2*Math.PI);
+			cxt.fillStyle = balls[i].color;
+			cxt.closePath();
+			cxt.fill();				
+		}
+	}
+
+	clearInterval(oTimer);
+	var oTimer = setInterval(function(){
+		//更新时钟
+		updateDigitTime();
+		//更新小球状态
+		updateBalls();
+		//渲染
+		render();
+	},50);
+</script>
+
+
+<form id="seelForm" name="seelForm" method="get" target="_blank"  action="//www.baidu.com/s" class="center-in-center">
+
+<fieldset class="search">
+<input id="wd" name="wd" class="box" placeholder="百度" style="float: left; color: rgb(0, 0, 0);font-family:微软雅黑;font-size:18px;padding: 5px ;" type="text">
+
+<button target="_blank" type="submit"  class=" btn"   value="搜索">
+  </fieldset>
+</form>
+
+<script type="text/javascript">
+ var search =["//www.baidu.com/s","wd","百度","//www.sogou.com/tx","query","搜狗","//list.tmall.com/search_product.htm","q","天猫","  //s.taobao.com/search","q","淘宝" ];
+ var form = document.getElementById("seelForm");
+ var txtbox =form.elements[1];
+ var subtxt ="百度"; 
+ var index=0;
+
+ var isWheelUp = function(event) {
+    event = event || window.event;
+    var up = true;
+    if(event.wheelDelta){//IE/Opera/Chrome
+     up = event.wheelDelta / 120 == 1 ? true : false;
+    }else{//Firefox
+     up = event.detail / 3 == 1 ? true : false;
+    }
+    return up;
+   };
+   
+  var mouseWheel = function(event){
+     var wheelUp = isWheelUp(event);
+	 if(wheelUp){
+	 //alert("up");
+	  index-=3;
+	 if(index<0){index=9;}
+	 form.action=search[index];	
+	 txtbox.name =search[index+1];
+	 subtxt =search[index+2];
+	 txtbox.placeholder = subtxt;
+	
+	 }
+	 else if(!wheelUp){
+	 //alert("down");//list.tmall.com/search_product.htm  //s.taobao.com/search  //www.sogou.com/tx
+	   index+=3;
+	 if(index>=12){index=0;}
+	 form.action=search[index];	
+	 txtbox.name =search[index+1];
+	 subtxt =search[index+2];
+	 txtbox.placeholder = subtxt;
+	 }
+  };
+  
+  
+   if(document.addEventListener){
+    document.addEventListener('DOMMouseScroll',function(event) { mouseWheel(event); },false);
+   }
+   document.onmousewheel = function(event) { mouseWheel(event); }
+</script>
+</body>
+</html>
